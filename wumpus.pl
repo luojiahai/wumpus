@@ -19,29 +19,29 @@ guess(state(X0-Y0,[],Map0), State, Guess) :-
         State = state(X1-Y1,Guess,Map0).
 %% guess
 guess(state(X0-Y0,Guess0,Map0), State, Guess) :-
-        ( \+ hasWumpus(X0-Y0, Map0, _) ->
+        ( \+ hasWumpus(X0-Y0, Map0) ->
           % guess part one: find the wumpus
           last(Guess0, LastG),
           guessPartOne(X0-Y0, Map0, LastG, Dirns, X1-Y1),
           append(Guess0, Dirns, Guess),
           State = state(X1-Y1, Guess0, Map0)
-        ; hasWumpus(X0-Y0, Map0, X-Y),
+        ; hasWumpus(X0-Y0, Map0),
           % guess part two: shoot the wumpus
           State = state(X0-Y0, Guess0, Map0),
-          writeln(X-Y),
+          writeln(X0-Y0),
           halt
         ).
 
 %% update state
 updateState(state(X0-Y0,_,Map0), Guess, Feedback, State) :-
-        ( \+ hasWumpus(X0-Y0, Map0, _) ->
+        ( \+ hasWumpus(X0-Y0, Map0) ->
           last(Feedback, LastF),
           updateMap(Map0, X0-Y0, LastF, Map),
           State = state(X0-Y0, Guess, Map),
           % debug here
           writeln(LastF), writeln(State)
-        ; hasWumpus(X0-Y0, Map0, X-Y),
-          writeln(X-Y)
+        ; hasWumpus(X0-Y0, Map0),
+          writeln(X0-Y0)
         ).
 
 pickNone([point(X-Y,none)|_], X-Y).
@@ -65,10 +65,10 @@ updateMap([point(X-Y,_)|Rest], X-Y, LastF, [point(X-Y,LastF)|Rest]) :-
 updateMap([point(I-J,Type)|Rest0], X-Y, LastF, [point(I-J,Type)|Rest]) :- 
         updateMap(Rest0, X-Y, LastF, Rest).
 
-hasWumpus(X-Y, [point(X-Y,wumpus)|_], X-Y).
-hasWumpus(X-Y, [point(_,_)|Rest], WX-WY) :- hasWumpus(X-Y, Rest, WX-WY).
+hasWumpus(X-Y, [point(X-Y,wumpus)|_]).
+hasWumpus(X-Y, [point(_,_)|Rest]) :- hasWumpus(X-Y, Rest).
 
-isEdge(_Map, X-Y, X-Y). % the end point
+isEdge(_Map, X-Y, X-Y).                 % the end point
 isEdge([point(X-Y,empty)|_], X-Y, _).   % empty point
 isEdge([point(X-Y,smell)|_], X-Y, _).   % smell point
 isEdge([point(X-Y,stench)|_], X-Y, _).  % stench point
