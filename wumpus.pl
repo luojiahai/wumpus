@@ -14,18 +14,20 @@ initialState(NR, NC, XS, YS, state(XS-YS,[],Map)) :-
 
 %% initial guess
 guess(state(X0-Y0,[],Map0), State, Guess) :-
-        X1 is X0 + 1, Y1 is Y0,
+        % initially go east and update the coordinates
         Guess = [east],
+        X1 is X0 + 1, Y1 is Y0,
+        % update State with new coordinates and Guess
         State = state(X1-Y1,Guess,Map0).
 %% guess
 guess(state(X0-Y0,Guess0,Map0), State, Guess) :-
-        ( \+ hasWumpus(X0-Y0, Map0) ->
+        ( \+ isWumpus(X0-Y0, Map0), \+ isPit(X0-Y0, Map0) ->
           % guess part one: find the wumpus
           last(Guess0, LastG),
           guessPartOne(X0-Y0, Map0, LastG, Dirns, X1-Y1),
           append(Guess0, Dirns, Guess),
           State = state(X1-Y1, Guess0, Map0)
-        ; hasWumpus(X0-Y0, Map0),
+        ; isWumpus(X0-Y0, Map0), isPit(X0-Y0, Map0),
           % guess part two: shoot the wumpus
           State = state(X0-Y0, Guess0, Map0),
           writeln(X0-Y0),
@@ -34,19 +36,15 @@ guess(state(X0-Y0,Guess0,Map0), State, Guess) :-
 
 %% update state
 updateState(state(X0-Y0,_,Map0), Guess, Feedback, State) :-
-        ( \+ hasWumpus(X0-Y0, Map0) ->
+        ( \+ isWumpus(X0-Y0, Map0), \+ isPit(X0-Y0, Map0) ->
           last(Feedback, LastF),
           updateMap(Map0, X0-Y0, LastF, Map),
           State = state(X0-Y0, Guess, Map),
           % debug here
           writeln(LastF), writeln(State)
-        ; hasWumpus(X0-Y0, Map0),
+        ; isWumpus(X0-Y0, Map0), isPit(X0-Y0, Map0),
           writeln(X0-Y0)
         ).
-
-pickNone([point(X-Y,none)|_], X-Y).
-pickNone([_|Rest], X-Y) :-
-        pickNone(Rest, X-Y).
 
 guessPartOne(X0-Y0, Map, PrevDir, Dirns, X1-Y1) :-
         ( PrevDir == east,  Y1 is Y0 + 1, X1 is X0, notVisited(X1-Y1, Map) -> Dirns = [south]
@@ -55,6 +53,10 @@ guessPartOne(X0-Y0, Map, PrevDir, Dirns, X1-Y1) :-
         ; PrevDir == north, X1 is X0 + 1, Y1 is Y0, notVisited(X1-Y1, Map) -> Dirns = [east]
         ; pickNone(Map, X1-Y1), setof(Path, generatePath(Map, X0-Y0, X1-Y1, Path), [Dirns|_Rest])
         ).
+
+pickNone([point(X-Y,none)|_], X-Y).
+pickNone([_|Rest], X-Y) :-
+        pickNone(Rest, X-Y).
 
 notVisited(X-Y, [point(X-Y,none)|_]).
 notVisited(X-Y, [point(_,_)|Rest]) :- notVisited(X-Y, Rest).
@@ -65,8 +67,11 @@ updateMap([point(X-Y,_)|Rest], X-Y, LastF, [point(X-Y,LastF)|Rest]) :-
 updateMap([point(I-J,Type)|Rest0], X-Y, LastF, [point(I-J,Type)|Rest]) :- 
         updateMap(Rest0, X-Y, LastF, Rest).
 
-hasWumpus(X-Y, [point(X-Y,wumpus)|_]).
-hasWumpus(X-Y, [point(_,_)|Rest]) :- hasWumpus(X-Y, Rest).
+isPit(X-Y, [point(X-Y,pit)|_]).
+isPit(X-Y, [point(_,_)|Rest]) :- isPit(X-Y, Rest).
+
+isWumpus(X-Y, [point(X-Y,wumpus)|_]).
+isWumpus(X-Y, [point(_,_)|Rest]) :- isWumpus(X-Y, Rest).
 
 isEdge(_Map, X-Y, X-Y).                 % the end point
 isEdge([point(X-Y,empty)|_], X-Y, _).   % empty point
