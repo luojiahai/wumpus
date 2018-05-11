@@ -21,34 +21,35 @@ guess(state(XS-YS,X0-Y0,[],Map0,Shots), State, Guess) :-
         State = state(XS-YS,X1-Y1,Guess,Map0,Shots).
 %% guess
 guess(state(XS-YS,X0-Y0,Guess0,Map0,Shots), State, Guess) :-
-        ( \+ hasWumpus(Map0, _), \+ hasPit(Map0, _) ->
+        ( \+ isWumpus(X0-Y0, Map0), \+ isPit(X0-Y0, Map0) ->
           % guess part one: find the wumpus
           last(Guess0, LastG),
           guessPartOne(X0-Y0, Map0, LastG, Dirns, X1-Y1),
           append(Guess0, Dirns, Guess),
           State = state(XS-YS,X1-Y1,Guess0,Map0,Shots)
-        ; hasWumpus(Map0, XW-YW), Shots == [] ->
+        ; isWumpus(X0-Y0, Map0), Shots == [] ->
           % guess part two: generate all possible paths and shoot the wumpus
-          guessPartTwo(XS-YS, XW-YW, Map0, Shots0),
+          guessPartTwo(XS-YS, X0-Y0, Map0, Shots0),
           pop(Shots0, First, Shots1),
           makeShoot(First, Guess),
           State = state(XS-YS,X0-Y0,Guess0,Map0,Shots1)
-        ; hasWumpus(Map0, _),
+        ; isWumpus(X0-Y0, Map0) ->
           % pop the first path list from Shots list
           pop(Shots, First, Shots1),
           makeShoot(First, Guess),
           State = state(XS-YS,X0-Y0,Guess0,Map0,Shots1)
+        ; isPit(X0-Y0, Map0)
         ).
 
 %% update state
 updateState(state(XS-YS,X0-Y0,_Guess0,Map0,Shots), Guess, Feedback, State) :-
-        ( \+ hasWumpus(Map0, _), \+ hasPit(Map0, _) ->
+        ( \+ isWumpus(X0-Y0, Map0), \+ isPit(X0-Y0, Map0) ->
           last(Feedback, LastF),
           updateMap(Map0, X0-Y0, LastF, Map),
-          State = state(XS-YS,X0-Y0,Guess,Map,Shots)
+          State = state(XS-YS,X0-Y0,Guess,Map,Shots),
           % debug here
-          % writeln(LastF), writeln(State)
-        ; hasWumpus(Map0, _),
+          writeln(LastF), writeln(State)
+        ; isWumpus(X0-Y0, Map0),
           State = state(XS-YS,X0-Y0,Guess,Map0,Shots)
         ).
 
@@ -82,11 +83,11 @@ updateMap([point(X-Y,_)|Rest], X-Y, LastF, [point(X-Y,LastF)|Rest]) :-
 updateMap([point(I-J,Type)|Rest0], X-Y, LastF, [point(I-J,Type)|Rest]) :- 
         updateMap(Rest0, X-Y, LastF, Rest).
 
-hasPit([point(X-Y,pit)|_], X-Y).
-hasPit([point(_,_)|Rest], X-Y) :- hasPit(Rest, X-Y).
+isPit(X-Y, [point(X-Y,pit)|_]).
+isPit(X-Y, [point(_,_)|Rest]) :- isPit(X-Y, Rest).
 
-hasWumpus([point(X-Y,wumpus)|_], X-Y).
-hasWumpus([point(_,_)|Rest], X-Y) :- hasWumpus(Rest, X-Y).
+isWumpus(X-Y, [point(X-Y,wumpus)|_]).
+isWumpus(X-Y, [point(_,_)|Rest]) :- isWumpus(X-Y, Rest).
 
 isEdge(_Map, X-Y, X-Y).                 % the end point
 isEdge([point(X-Y,empty)|_], X-Y, _).   % empty point
