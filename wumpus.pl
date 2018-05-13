@@ -59,7 +59,7 @@ guessPartOne(X0-Y0, Map, PrevDir, Dirns, X1-Y1) :-
         ; PrevDir == south, X1 is X0 - 1, Y1 is Y0, notVisited(X1-Y1, Map) -> Dirns = [west]
         ; PrevDir == west,  Y1 is Y0 - 1, X1 is X0, notVisited(X1-Y1, Map) -> Dirns = [north]
         ; PrevDir == north, X1 is X0 + 1, Y1 is Y0, notVisited(X1-Y1, Map) -> Dirns = [east]
-        ; pickNone(Map, X1-Y1), generateOnePath(Map, X0-Y0, X1-Y1, Dirns), write("GEN: "), writeln(Dirns)
+        ; setof(XN-YN, pickNone(Map,XN-YN), Nones), generateOnePath(Map, X0-Y0, X1-Y1, Nones, Dirns)
         ).
 
 guessPartTwo(X0-Y0, X1-Y1, Map, Dirns, Shots) :-
@@ -96,6 +96,7 @@ isEdge(_Map, X-Y, X-Y).                 % the end point
 isEdge([point(X-Y,empty)|_], X-Y, _).   % empty point
 isEdge([point(X-Y,smell)|_], X-Y, _).   % smell point
 isEdge([point(X-Y,stench)|_], X-Y, _).  % stench point
+isEdge([point(X-Y,damp)|_], X-Y, _).    % damp point
 isEdge([point(_,_)|Rest], X-Y, EX-EY) :- isEdge(Rest, X-Y, EX-EY). % otherwise
 
 through(Map, X0-Y0, Dirn, X-Y, EX-EY) :- 
@@ -108,10 +109,13 @@ nextPos(X0-Y0, X0-Y, Dirn) :- Y is Y0 - 1, Dirn = north.
 nextPos(X0-Y0, X-Y0, Dirn) :- X is X0 - 1, Dirn = west.
 
 pickNone([point(X-Y,none)|_], X-Y).
-pickNone([_|Rest], X-Y) :-
-        pickNone(Rest, X-Y).
+pickNone([_|Rest], X-Y) :- pickNone(Rest, X-Y).
 
-generateOnePath(Map, Start, End, Path) :-
+generateOnePath(Map, X0-Y0, X1-Y1, [XN-YN|Rest], Path) :-
+        ( generateOnePathHelper(Map, X0-Y0, XN-YN, Path), writeln(Path), Path \= [] -> X1 is XN, Y1 is YN
+        ; generateOnePath(Map, X0-Y0, X1-Y1, Rest, Path)
+        ).
+generateOnePathHelper(Map, Start, End, Path) :-
         generatePath(Map, Start, End, [Start], Path), !.
 generateAllPaths(Map, Start, End, Path, Sols) :- 
         ( generatePath(Map, Start, End, [Start], Path), \+ member(Path, Sols) -> !
