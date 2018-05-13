@@ -20,23 +20,29 @@ guess(state(XS-YS,X0-Y0,[],Map0,Shots), State, Guess) :-
         State = state(XS-YS,X1-Y1,[],Map0,Shots).
 %% guess
 guess(state(XS-YS,X0-Y0,Guess0,Map0,Shots), State, Guess) :-
-        ( isPit(X0-Y0, Map0), getNones(Map0, Nones), Nones \= [], guessPartOne(XS-YS, X1-Y1, Map0, Nones, Dirns) -> 
+        ( isPit(X0-Y0, Map0), getNones(Map0, Nones), Nones \= [], 
+          guessPartOne(XS-YS, X1-Y1, Map0, Nones, Dirns) -> 
           append([], Dirns, Guess),
-          State = state(XS-YS,X1-Y1,[],Map0,Shots)
-        ; isWumpus(X1-Y1, Map0) ->
-          guessPartTwo(XS-YS, X1-Y1, Map0, Dirns, Shots),
+          State = state(XS-YS,X1-Y1,Guess0,Map0,Shots)
+        ; isPit(X0-Y0, Map0), isWumpus(X1-Y1, Map0), 
+          guessPartTwo(XS-YS, X1-Y1, Map0, Dirns, Shots) ->
+          makeShoot(Dirns, Guess),
+          append(Shots, [Dirns], Shots1),
+          State = state(XS-YS,X1-Y1,Guess0,Map0,Shots1)
+        ; isWumpus(X1-Y1, Map0), 
+          guessPartTwo(XS-YS, X1-Y1, Map0, Dirns, Shots) ->
           makeShoot(Dirns, Guess),
           append(Shots, [Dirns], Shots1),
           State = state(XS-YS,X1-Y1,Guess0,Map0,Shots1)
         ; getNones(Map0, Nones), Nones \= [],
-          guessPartOne(X0-Y0, X1-Y1, Map0, Nones, Dirns),
-          append(Guess0, Dirns, Guess),
-          State = state(XS-YS,X1-Y1,Guess0,Map0,Shots)
+          guessPartOne(XS-YS, X1-Y1, Map0, Nones, Dirns),
+          append([], Dirns, Guess),
+          State = state(XS-YS,X1-Y1,[],Map0,Shots)
         ).
 
 %% update state
-updateState(state(XS-YS,X0-Y0,_Guess0,Map0,Shots), Guess, Feedback, State) :-
-        ( \+ isWumpus(_, Map0) ->
+updateState(state(XS-YS,X0-Y0,Guess0,Map0,Shots), Guess, Feedback, State) :-
+        ( Guess0 == [] ->
           last(Guess, LastG),
           last(Feedback, LastF),
           updatePos(X0-Y0, LastG, LastF, X1-Y1),
@@ -113,9 +119,7 @@ generateOnePath(Map, X0-Y0, X1-Y1, [XN-YN|Rest], Path) :-
 generateOnePathHelper(Map, Start, End, Path) :-
         generatePath(Map, Start, End, [Start], Path), !.
 generateAllPaths(Map, Start, End, Path, Sols) :- 
-        ( generatePath(Map, Start, End, [Start], Path), \+ member(Path, Sols), isValidShot(Path) -> !
-        ; generateAllPaths(Map, Start, End, Path, Sols)
-        ).
+        generatePath(Map, Start, End, [Start], Path), \+ member(Path, Sols), isValidShot(Path), !.
 generatePath(_Map, Start, Start, _Previous, []).
 generatePath(Map, Start, End, Previous, [Dirn|Path]) :-
         through(Map, Start, Dirn, Med, End),
