@@ -12,12 +12,6 @@
 initialState(NR, NC, XS, YS, state(XS-YS,XS-YS,[],Map,[])) :-
         findall(point(X-Y,none), (between(1,NC,X), between(1,NR,Y)), Map).
 
-%% initial guess
-guess(state(XS-YS,_,[],Map0,Shots), State, Guess) :-
-        getNones(Map0, Nones), Nones \= [],
-        generatePathOne(Map0, XS-YS, X1-Y1, Nones, Dirns),
-        append([], Dirns, Guess),
-        State = state(XS-YS,X1-Y1,[],Map0,Shots).
 %% guess
 guess(state(XS-YS,_,Guess0,Map0,Shots), State, Guess) :-
         ( isWumpus(X1-Y1, Map0), 
@@ -37,11 +31,9 @@ guess(state(XS-YS,_,Guess0,Map0,Shots), State, Guess) :-
 updateState(state(XS-YS,X0-Y0,Guess0,Map0,Shots), Guess, Feedback, State) :-
         ( Guess0 == [] ->
           % Part One
-          last(Guess, LastG),
-          last(Feedback, LastF),
-          updatePos(X0-Y0, LastG, LastF, X1-Y1),
+          last(Guess, LastG), last(Feedback, LastF),
           updateMap(Map0, X0-Y0, LastF, Map),
-          State = state(XS-YS,X1-Y1,Guess,Map,Shots),
+          State = state(XS-YS,X0-Y0,Guess,Map,Shots),
           % debug here
           writeln(LastF), writeln(State)
         ; % Part Two
@@ -50,13 +42,6 @@ updateState(state(XS-YS,X0-Y0,Guess0,Map0,Shots), Guess, Feedback, State) :-
           last(Feedback, LastF),
           writeln(LastF), writeln(State)
         ).
-
-
-updatePos(X0-Y0, east, wall, X1-Y0) :- X1 is X0 - 1.
-updatePos(X0-Y0, south, wall, X0-Y1) :- Y1 is Y0 - 1.
-updatePos(X0-Y0, west, wall, X1-Y0) :- X1 is X0 + 1.
-updatePos(X0-Y0, north, wall, X0-Y1) :- Y1 is Y0 + 1.
-updatePos(X0-Y0, _, _, X0-Y0).
 
 updateMap([], _, _, []).
 updateMap([point(X-Y,_)|Rest], X-Y, LastF, [point(X-Y,LastF)|Rest]) :- 
