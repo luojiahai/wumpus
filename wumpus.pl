@@ -59,7 +59,7 @@ guessPartOne(X0-Y0, Map, PrevDir, Dirns, X1-Y1) :-
         ; PrevDir == south, X1 is X0 - 1, Y1 is Y0, notVisited(X1-Y1, Map) -> Dirns = [west]
         ; PrevDir == west,  Y1 is Y0 - 1, X1 is X0, notVisited(X1-Y1, Map) -> Dirns = [north]
         ; PrevDir == north, X1 is X0 + 1, Y1 is Y0, notVisited(X1-Y1, Map) -> Dirns = [east]
-        ; generateOnePath(Map, Map, X0-Y0, X1-Y1, [], Dirns), write("GEN: "), writeln(Dirns)
+        ; pickNone(Map, X1-Y1), generateOnePath(Map, X0-Y0, X1-Y1, Dirns), write("GEN: "), writeln(Dirns)
         ).
 
 guessPartTwo(X0-Y0, X1-Y1, Map, Dirns, Shots) :-
@@ -107,12 +107,12 @@ nextPos(X0-Y0, X-Y0, Dirn) :- X is X0 + 1, Dirn = east.
 nextPos(X0-Y0, X0-Y, Dirn) :- Y is Y0 - 1, Dirn = north.
 nextPos(X0-Y0, X-Y0, Dirn) :- X is X0 - 1, Dirn = west.
 
-generateOnePath([point(X-Y,none)|Rest], Map, X0-Y0, X-Y, Picks, Path) :-
-        ( \+ member(X-Y, Picks), generatePath(Map, X0-Y0, X-Y, [X0-Y0], Path), Path \= [] -> !
-        ; generateOnePath(Rest, Map, X0-Y0, X-Y, [X-Y|Picks], Path)
-        ).
-generateOnePath([_|Rest], Map, X0-Y0, X-Y, Picks, Path) :-
-        generateOnePath(Rest, Map, X0-Y0, X-Y, Picks, Path).
+pickNone([point(X-Y,none)|_], X-Y).
+pickNone([_|Rest], X-Y) :-
+        pickNone(Rest, X-Y).
+
+generateOnePath(Map, Start, End, Path) :-
+        generatePath(Map, Start, End, [Start], Path), !.
 generateAllPaths(Map, Start, End, Path, Sols) :- 
         ( generatePath(Map, Start, End, [Start], Path), \+ member(Path, Sols) -> !
         ; generateAllPaths(Map, Start, End, Path, Sols)
