@@ -59,7 +59,7 @@ guessPartOne(X0-Y0, Map, PrevDir, Dirns, X1-Y1) :-
         ; PrevDir == south, X1 is X0 - 1, Y1 is Y0, notVisited(X1-Y1, Map) -> Dirns = [west]
         ; PrevDir == west,  Y1 is Y0 - 1, X1 is X0, notVisited(X1-Y1, Map) -> Dirns = [north]
         ; PrevDir == north, X1 is X0 + 1, Y1 is Y0, notVisited(X1-Y1, Map) -> Dirns = [east]
-        ; setof(XN-YN, pickNone(Map,XN-YN), Nones), generateOnePath(Map, X0-Y0, X1-Y1, Nones, Dirns)
+        ; getNones(Map, Nones), generateOnePath(Map, X0-Y0, X1-Y1, Nones, Dirns)
         ).
 
 guessPartTwo(X0-Y0, X1-Y1, Map, Dirns, Shots) :-
@@ -108,8 +108,9 @@ nextPos(X0-Y0, X-Y0, Dirn) :- X is X0 + 1, Dirn = east.
 nextPos(X0-Y0, X0-Y, Dirn) :- Y is Y0 - 1, Dirn = north.
 nextPos(X0-Y0, X-Y0, Dirn) :- X is X0 - 1, Dirn = west.
 
-pickNone([point(X-Y,none)|_], X-Y).
-pickNone([_|Rest], X-Y) :- pickNone(Rest, X-Y).
+getNones([], []).
+getNones([point(X-Y,none)|Rest0], [X-Y|Rest]) :- getNones(Rest0, Rest).
+getNones([_|Rest0], Nones) :- getNones(Rest0, Nones).
 
 generateOnePath(Map, X0-Y0, X1-Y1, [XN-YN|Rest], Path) :-
         ( generateOnePathHelper(Map, X0-Y0, XN-YN, Path), writeln(Path), Path \= [] -> X1 is XN, Y1 is YN
