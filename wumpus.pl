@@ -29,14 +29,13 @@ guess(state(XS-YS,X0-Y0,Guess0,Map0,Shots), State, Guess) :-
           State = state(XS-YS,X1-Y1,Guess0,Map0,Shots)
         ; isWumpus(X0-Y0, Map0) ->
           guessPartTwo(XS-YS, X0-Y0, Map0, Dirns, Shots),
-        %   write("DIRNS: "), writeln(Dirns),
           makeShoot(Dirns, Guess),
-        %   write("GUESS: "), writeln(Guess),
           append(Shots, [Dirns], Shots1),
-        %   write("NEW SHOTS: "), writeln(Shots1),
           State = state(XS-YS,X0-Y0,Guess0,Map0,Shots1)
         ; isPit(X0-Y0, Map0),
-          writeln("PIT!")
+          Guess = [east],
+          X1 is XS + 1, Y1 is YS,
+          State = state(XS-YS,X1-Y1,Guess,Map0,Shots)
         ).
 
 %% update state
