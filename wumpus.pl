@@ -23,7 +23,7 @@ guess(state(XS-YS,X0-Y0,Guess0,Map0,Shots), State, Guess) :-
         ( isPit(X0-Y0, Map0), getNones(Map0, Nones), Nones \= [], 
           guessPartOne(XS-YS, X1-Y1, Map0, Nones, Dirns) -> 
           append([], Dirns, Guess),
-          State = state(XS-YS,X1-Y1,Guess0,Map0,Shots)
+          State = state(XS-YS,X1-Y1,[],Map0,Shots)
         ; isPit(X0-Y0, Map0), isWumpus(X1-Y1, Map0), 
           guessPartTwo(XS-YS, X1-Y1, Map0, Dirns, Shots) ->
           makeShoot(Dirns, Guess),
@@ -43,6 +43,7 @@ guess(state(XS-YS,X0-Y0,Guess0,Map0,Shots), State, Guess) :-
 %% update state
 updateState(state(XS-YS,X0-Y0,Guess0,Map0,Shots), Guess, Feedback, State) :-
         ( Guess0 == [] ->
+          % Part One
           last(Guess, LastG),
           last(Feedback, LastF),
           updatePos(X0-Y0, LastG, LastF, X1-Y1),
@@ -50,7 +51,8 @@ updateState(state(XS-YS,X0-Y0,Guess0,Map0,Shots), Guess, Feedback, State) :-
           State = state(XS-YS,X1-Y1,Guess,Map,Shots),
           % debug here
           writeln(LastF), writeln(State)
-        ; State = state(XS-YS,X0-Y0,Guess,Map0,Shots),
+        ; % Part Two
+          State = state(XS-YS,X0-Y0,Guess,Map0,Shots),
           % debug here
           last(Feedback, LastF),
           writeln(LastF), writeln(State)
