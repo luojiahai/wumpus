@@ -10,7 +10,7 @@
 
 %% initial state
 initialState(NR, NC, XS, YS, state(XS-YS,XS-YS,[],Map,[])) :-
-        findall(point(X-Y,none), (between(1,NR,X), between(1,NC,Y)), Map).
+        findall(point(X-Y,none), (between(1,NC,X), between(1,NR,Y)), Map).
 
 %% initial guess
 guess(state(XS-YS,X0-Y0,[],Map0,Shots), State, Guess) :-
@@ -22,7 +22,6 @@ guess(state(XS-YS,X0-Y0,[],Map0,Shots), State, Guess) :-
 %% guess
 guess(state(XS-YS,X0-Y0,Guess0,Map0,Shots), State, Guess) :-
         ( \+ isWumpus(X0-Y0, Map0), \+ isPit(X0-Y0, Map0) ->
-          % guess part one: find the wumpus
           last(Guess0, LastG),
           guessPartOne(X0-Y0, Map0, LastG, Dirns, X1-Y1),
           append(Guess0, Dirns, Guess),
@@ -33,9 +32,10 @@ guess(state(XS-YS,X0-Y0,Guess0,Map0,Shots), State, Guess) :-
           append(Shots, [Dirns], Shots1),
           State = state(XS-YS,X0-Y0,Guess0,Map0,Shots1)
         ; isPit(X0-Y0, Map0),
-          Guess = [east],
-          X1 is XS + 1, Y1 is YS,
-          State = state(XS-YS,X1-Y1,Guess,Map0,Shots)
+          last(Guess0, LastG),
+          guessPartOne(XS-YS, Map0, LastG, Dirns, X1-Y1),
+          append([], Dirns, Guess),
+          State = state(XS-YS,X1-Y1,Guess0,Map0,Shots)
         ).
 
 %% update state
@@ -48,8 +48,7 @@ updateState(state(XS-YS,X0-Y0,_Guess0,Map0,Shots), Guess, Feedback, State) :-
           State = state(XS-YS,X1-Y1,Guess,Map,Shots),
           % debug here
           writeln(LastF), writeln(State)
-        ; isWumpus(X0-Y0, Map0),
-          State = state(XS-YS,X0-Y0,Guess,Map0,Shots),
+        ; State = state(XS-YS,X0-Y0,Guess,Map0,Shots),
           % debug here
           last(Feedback, LastF),
           writeln(LastF), writeln(State)
@@ -60,7 +59,7 @@ guessPartOne(X0-Y0, Map, PrevDir, Dirns, X1-Y1) :-
         ; PrevDir == south, X1 is X0 - 1, Y1 is Y0, notVisited(X1-Y1, Map) -> Dirns = [west]
         ; PrevDir == west,  Y1 is Y0 - 1, X1 is X0, notVisited(X1-Y1, Map) -> Dirns = [north]
         ; PrevDir == north, X1 is X0 + 1, Y1 is Y0, notVisited(X1-Y1, Map) -> Dirns = [east]
-        ; pickNone(Map, X1-Y1), generateOnePath(Map, X0-Y0, X1-Y1, Dirns)
+        ; pickNone(Map, X1-Y1), generateOnePath(Map, X0-Y0, X1-Y1, Dirns), write("GEN: "), writeln(Dirns)
         ).
 
 guessPartTwo(X0-Y0, X1-Y1, Map, Dirns, Shots) :-
@@ -119,8 +118,6 @@ generateAllPaths(Map, Start, End, Path, Sols) :-
           !
         ; generateAllPaths(Map, Start, End, Path, Sols)
         ).
-        % writeln("LETS GO!"),
-        % generatePath(Map, Start, End, [Start], Path).
 generatePath(_Map, Start, Start, _Previous, []).
 generatePath(Map, Start, End, Previous, [Dirn|Path]) :-
         through(Map, Start, Dirn, Med, End),
