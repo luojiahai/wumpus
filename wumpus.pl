@@ -138,7 +138,8 @@ searchTwo(Map, Start, End, Path, Sols) :-
         % and is a valid shot
         ( search(Map, Start, End, [Start], Path), 
           \+ member(Path, Sols), isValidShot(Path) -> !
-        ; search(Map, Start, End, [Start], Path0), 
+        ; % try to shorten the path to a valid path if the original path is invalid
+          search(Map, Start, End, [Start], Path0), 
           shortenPath(Start, Path0, End, Path), 
           \+ member(Path, Sols), !
         ).
