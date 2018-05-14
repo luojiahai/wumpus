@@ -66,7 +66,7 @@ isWumpus(X-Y, [point(X-Y,wumpus)|_]).
 isWumpus(X-Y, [point(_,_)|Rest]) :- isWumpus(X-Y, Rest).
 
 %% check whether a path is a valid path for shooting wumpus
-%% check if the last two directions are the same
+%% true if the last two directions are the same
 isValidShot([X,X|[]]).
 isValidShot([_|Rest]) :- isValidShot(Rest).
 
@@ -85,13 +85,14 @@ isEdge([point(_,_)|Rest], X-Y, EX-EY) :-
         isEdge(Rest, X-Y, EX-EY).       % otherwise
 
 %% explore map
+%% args: +Map, +Start, -Direction, -Med, +End
 explore(Map, X0-Y0, Dirn, X-Y, EX-EY) :- 
         % get each direction and check whether there is a edge 
         % between current position to the next position
         nextPos(X0-Y0, X-Y, Dirn),
         isEdge(Map, X-Y, EX-EY).
 
-%% generate four positions and correspond coordinates
+%% generate four directions and correspond position
 nextPos(X0-Y0, X0-Y, Dirn) :- Y is Y0 + 1, Dirn = south.
 nextPos(X0-Y0, X-Y0, Dirn) :- X is X0 + 1, Dirn = east.
 nextPos(X0-Y0, X0-Y, Dirn) :- Y is Y0 - 1, Dirn = north.
