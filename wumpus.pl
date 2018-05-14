@@ -32,7 +32,7 @@ guess(state(XS-YS,_,Guess0,Map0,Shots), State, Guess) :-
 updateState(state(XS-YS,X0-Y0,Guess0,Map0,Shots), Guess, Feedback, State) :-
         ( Guess0 == [] ->
           % part one
-          last(Guess, LastG), last(Feedback, LastF),
+          last(Feedback, LastF),
           updateMap(Map0, X0-Y0, LastF, Map),
           State = state(XS-YS,X0-Y0,Guess,Map,Shots),
           % debug here
