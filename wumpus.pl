@@ -70,6 +70,22 @@ isWumpus(X-Y, [point(_,_)|Rest]) :- isWumpus(X-Y, Rest).
 isValidShot([X,X|[]]).
 isValidShot([_|Rest]) :- isValidShot(Rest).
 
+%% shorten a path and let the robot able to shoot in range
+shortenPath(_, [], _, []).
+shortenPath(X0-Y0, [Dir0|Rest0], XW-YW, [Dir0|Rest1]) :-
+        ( direction(Dir0, X0-Y0, X1-Y1), 
+          ((X1 == X0, X1 == XW); (Y1 == Y0, Y1 == YW))  ->
+          Rest1 = [Dir0], shortenPath(X1-Y1, [], XW-YW, [])
+        ; direction(Dir0, X0-Y0, X1-Y1),
+          shortenPath(X1-Y1, Rest0, XW-YW, Rest1)
+        ).
+%% move to the next position by given direction
+%% return the coordinates of the next position
+direction(east, X0-Y0, X-Y0) :- X is X0 + 1.
+direction(south, X0-Y0, X0-Y) :- Y is Y0 + 1.
+direction(west, X0-Y0, X-Y0) :- X is X0 - 1.
+direction(north, X0-Y0, X0-Y) :- Y is Y0 - 1.
+
 %% replace the last element of a path to 'shoot'
 makeShoot([], []).
 makeShoot([_|[]], [shoot|[]]).
@@ -120,8 +136,12 @@ searchTwo(Map, Start, End, Path, Sols) :-
         % true if there is a path 
         % and the path is not in the Sols list
         % and is a valid shot
-        search(Map, Start, End, [Start], Path), 
-        \+ member(Path, Sols), isValidShot(Path), !.
+        ( search(Map, Start, End, [Start], Path), 
+          \+ member(Path, Sols), isValidShot(Path) -> !
+        ; search(Map, Start, End, [Start], Path0), 
+          shortenPath(Start, Path0, End, Path), 
+          \+ member(Path, Sols), !
+        ).
 
 %% search path
 search(_Map, Start, Start, _Previous, []).
