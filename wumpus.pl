@@ -38,15 +38,10 @@ updateState(state(XS-YS,X0-Y0,Guess0,Map0,Shots), Guess, Feedback, State) :-
           % get the feedback and update the map
           last(Feedback, LastF),
           updateMap(Map0, X0-Y0, LastF, Map),
-          State = state(XS-YS,X0-Y0,Guess,Map,Shots),
-          % debug here
-          writeln(LastF), writeln(State)
+          State = state(XS-YS,X0-Y0,Guess,Map,Shots)
         ; % part two
           % do not need to update anything
-          State = state(XS-YS,X0-Y0,Guess,Map0,Shots),
-          % debug here
-          last(Feedback, LastF),
-          writeln(LastF), writeln(State)
+          State = state(XS-YS,X0-Y0,Guess,Map0,Shots)
         ).
 
 %% update map
