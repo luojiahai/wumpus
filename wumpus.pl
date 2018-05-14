@@ -18,13 +18,16 @@ guess(state(XS-YS,_,Guess0,Map0,Shots), State, Guess) :-
         ( isWumpus(X1-Y1, Map0), 
           searchTwo(Map0, XS-YS, X1-Y1, Dirns, Shots) ->
           % part two
+          % if there is wumpus and there is a valid path to wumpus
+          % then make a shot and also record the shot in the Shots list
           makeShoot(Dirns, Guess),
           append(Shots, [Dirns], Shots1),
           State = state(XS-YS,X1-Y1,Guess0,Map0,Shots1)
         ; % part one
+          % get all unexplored points and search for a path
+          % from current position to the unexplored point
           getNones(Map0, Nones), Nones \= [],
-          searchOne(Map0, XS-YS, X1-Y1, Nones, Dirns),
-          append([], Dirns, Guess),
+          searchOne(Map0, XS-YS, X1-Y1, Nones, Guess),
           State = state(XS-YS,X1-Y1,[],Map0,Shots)
         ).
 
@@ -32,12 +35,14 @@ guess(state(XS-YS,_,Guess0,Map0,Shots), State, Guess) :-
 updateState(state(XS-YS,X0-Y0,Guess0,Map0,Shots), Guess, Feedback, State) :-
         ( Guess0 == [] ->
           % part one
+          % get the feedback and update the map
           last(Feedback, LastF),
           updateMap(Map0, X0-Y0, LastF, Map),
           State = state(XS-YS,X0-Y0,Guess,Map,Shots),
           % debug here
           writeln(LastF), writeln(State)
         ; % part two
+          % do not need to update anything
           State = state(XS-YS,X0-Y0,Guess,Map0,Shots),
           % debug here
           last(Feedback, LastF),
@@ -81,6 +86,8 @@ isEdge([point(_,_)|Rest], X-Y, EX-EY) :-
 
 %% explore map
 explore(Map, X0-Y0, Dirn, X-Y, EX-EY) :- 
+        % get each direction and check whether there is a edge 
+        % between current position to the next position
         nextPos(X0-Y0, X-Y, Dirn),
         isEdge(Map, X-Y, EX-EY).
 
@@ -91,16 +98,27 @@ nextPos(X0-Y0, X0-Y, Dirn) :- Y is Y0 - 1, Dirn = north.
 nextPos(X0-Y0, X-Y0, Dirn) :- X is X0 - 1, Dirn = west.
 
 %% search a path for part one
+%% args: +Map, +Start, -End, +List of 'none'(unexplored) points, -Path
 searchOne(Map, X0-Y0, X1-Y1, [XN-YN|Rest], Path) :-
+        % take the first element (XN,YN) of the unexplored points list
         ( searchOneHelper(Map, X0-Y0, XN-YN, Path), Path \= [] -> 
+          % if there is a path (Path is not empty) from (X0,Y0) to (XN,YN)
+          % then assign XN and YN to X1 and Y1 respectively as solution
           X1 is XN, Y1 is YN
-        ; searchOne(Map, X0-Y0, X1-Y1, Rest, Path)
+        ; % else there is no path, search with next element of unexplored points list
+          searchOne(Map, X0-Y0, X1-Y1, Rest, Path)
         ).
 searchOneHelper(Map, Start, End, Path) :-
+        % a helper predicate to search for a path
+        % once there is one solution, '!' stops the recursion and return
         search(Map, Start, End, [Start], Path), !.
 
 %% search a path for part two
+%% args: +Map, +Start, -End, -Path, +List of paths that already taken as guess
 searchTwo(Map, Start, End, Path, Sols) :- 
+        % true if there is a path 
+        % and the path is not in the Sols list
+        % and is a valid shot
         search(Map, Start, End, [Start], Path), 
         \+ member(Path, Sols), isValidShot(Path), !.
 
